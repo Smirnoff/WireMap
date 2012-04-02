@@ -61,3 +61,15 @@
               (lambda () (list item))))
            (make-hash-table)
            (transaction-templates)))))
+
+(define iban-registry
+  (run-once
+   (lambda ()
+     (relative-file-data "../data/iban_registry.scm"))))
+
+(define iban-registry/country
+  (run-once
+   (lambda ()
+     (alist->hash-table
+      (map (lambda (x) (cons (alist-ref 'country-code x) X))
+           (iban-registry))))))
