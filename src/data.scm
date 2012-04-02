@@ -49,14 +49,15 @@
 (define transaction-templates
   (run-once
    (lambda ()
-     (relative-file-data "../data/iso_3166-1_alpha-2.scm"))))
+     (relative-file-data "../data/payment_templates.scm"))))
 
 (define transaction-templates/currency
   (run-once
    (lambda ()
      (fold (lambda (item res)
-             (hash-table-update! res (alist-ref 'source-currency item)
-                                 (lambda (x) (cons item x))
-                                 (lambda () (list item))))
+             (hash-table-update!
+              res (alist-ref 'currency (alist-ref 'matcher item))
+              (lambda (x) (cons item x))
+              (lambda () (list item))))
            (make-hash-table)
            (transaction-templates)))))

@@ -39,13 +39,15 @@
  (template
   (beneficiary-account-number
    (type . IBAN)
+   (format . "AL2!n8!n16!c")
    (format . "ALkk AAAB BBBD CCCC CCCC CCCC CCCC")
    (digits . 28)
    (check-digits (2 2))
    (bank-code (5 3))
    (branch-code (8 1) (10 3))
    (account-check-digit (13 1))
-   (account-number (15 4) (20 4) (25 4) (30 4)))
+   (account-number (15 4) (20 4) (25 4) (30 4))
+)
   (beneficiary-bank-BIC/SWIFT (digits . 8))
   (country . AL)
   (purpose-for-payment)

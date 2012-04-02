@@ -2,6 +2,9 @@
 
 (load-relative "math")
 
+(define (iban-sans-spaces x)
+  (string-concatenate (string-split x)))
+
 (define (valid-iban? iban)
 
   (define (letter->iban-number x)
@@ -13,7 +16,7 @@
         (list x)))
 
   (define (valid-modulus?)
-    (let* ((spaceless (string-concatenate (string-split iban)))
+    (let* ((spaceless (iban-sans-spaces iban))
            (rearranged (string-append (substring spaceless 4)
                                       (substring spaceless 0 4)))
            (letters-as-numbers
