@@ -377,7 +377,7 @@
  (BBAN-length . 11)
  (bank-identifier 0 4)
  (bank-identifier-length . "4!n")
- (IBAN-structurue . "NO2!n4!n6!n1!n")
+ (IBAN-structure . "NO2!n4!n6!n1!n")
  (IBAN-length . 15))
 
 ((country-code . PL)
@@ -472,7 +472,7 @@
  (BBAN-length . 17)
  (bank-identifier 0 5)
  (bank-identifier-length . "5!n")
- (IBAN-structure . "CH2!N5!n12!c")
+ (IBAN-structure . "CH2!n5!n12!c")
  (IBAN-length . 21))
 
 ((country-code . TN)
@@ -508,7 +508,7 @@
  (branch-identifier 4 6)
  (bank-identifier-length . "4!a")
  (branch-identifier-length . "6!n")
- (IBAN-structure . "BG2!n4!a6!n8!n")
+ (IBAN-structure . "GB2!n4!a6!n8!n")
  (IBAN-length . 22))
 
 ((country-code . VG)
