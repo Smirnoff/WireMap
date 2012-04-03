@@ -71,5 +71,5 @@
   (run-once
    (lambda ()
      (alist->hash-table
-      (map (lambda (x) (cons (alist-ref 'country-code x) X))
+      (map (lambda (x) (cons (alist-ref 'country-code x) x))
            (iban-registry))))))
