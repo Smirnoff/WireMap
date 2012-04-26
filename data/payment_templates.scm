@@ -25,33 +25,27 @@
   (swift-branch-details-field . blank)
   (beneficiary-bank-swift (digits . 8))
   (beneficiary-bank-country . AE)
-  (beneficary-account-number
-   (type . IBAN)
-   (format . "AEkk AAAB BBBB BBBB BBBB BBB")
-   (digits . 23)
-   (check-digits (2 2))
-   (bank-code (5 3))
-   (account-number (8 1) (10 4) (15 4) (20 4) (25 3)))
+  (beneficary-account-number (type . IBAN))
   (additional-considerations (client-references . additional-bank-details)
                              optional)))
 
 ((matcher (currency . ALL) (beneficiary-bank-country . AL))
  (template
-  (beneficiary-account-number
-   (type . IBAN)
-   (format . "AL2!n8!n16!c")
-   (format . "ALkk AAAB BBBD CCCC CCCC CCCC CCCC")
-   (digits . 28)
-   (check-digits (2 2))
-   (bank-code (5 3))
-   (branch-code (8 1) (10 3))
-   (account-check-digit (13 1))
-   (account-number (15 4) (20 4) (25 4) (30 4))
-)
+  (beneficiary-account-number (type . IBAN))
   (beneficiary-bank-BIC/SWIFT (digits . 8))
   (country . AL)
   (purpose-for-payment)
   (beneficiary-full-name)
   (beneficiary-address)))
+
+((matcher (currency . AMD) (beneficiary-bank-country . AM))
+ (template
+  (beneficiary-account-number (type . other) (length 11 16))
+  (purpose-for-payment)
+  (beneficiary-bank-country . AM)
+  (beneficiary-full-name)
+  (beneficiary-address)
+  )
+)
 
 ;end
