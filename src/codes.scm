@@ -31,10 +31,11 @@
          (and (valid-country-code? res)
               res))))
 
+(define (iban-info iban)
+  (hash-table-ref/default (iban-registry/country) (iban-country-code iban) '()))
+
 (define (iban-country-format iban)
-  (alist-ref 'IBAN-structure
-             (hash-table-ref/default
-              (iban-registry/country) (iban-country-code iban) '())))
+  (alist-ref 'IBAN-structure (iban-info iban)))
 
 (define (iban-format-pieces x)
   (define (iban-format-next-piece x pos)
@@ -108,6 +109,34 @@
 (define (valid-iban? iban)
   (and (valid-iban-modulus? iban)
        (iban-country-format-matches? iban (iban-country-format/split iban))))
+
+(define (iban-bban iban)
+  (substring iban 4))
+
+(define (iban-format-getter name confirmer)
+  (lambda (iban)
+    (let* ((format (iban-info iban))
+           (format-info (alist-ref name format))
+           (format-validation (and confirmer (alist-ref confirmer format)))
+           (res (and format-info
+                     (substring (iban-bban iban)
+                                (car format-info)
+                                (+ (car format-info) (cadr format-info))))))
+      (when (and confirmer
+                 (not (car (iban-piece-matches res format-validation 0))))
+            (error "Bad bank-identifier" iban res))
+      (and format-info
+           res))))
+
+(define iban-bank-identifier/no-validate
+  (iban-format-getter 'bank-identifier #f))
+(define iban-bank-identifier
+  (bank-format-getter 'bank-identifier 'bank-identifier-length))
+
+(define iban-branch-identifier/no-validate
+  (iban-format-getter 'branch-identifier #f))
+(define iban-branch-identifier
+  (bank-format-getter 'branch-identifier 'branch-identifier-length))
 
 (define (swift-code-bank/raw x) (substring x 0 4))
 (define (swift-code-country/raw x) (substring x 4 6))

@@ -92,7 +92,7 @@
  (bank-identifier 0 3)
  (branch-identifier 3 5)
  (bank-identifier-length . "3!n")
- (branch-identifer-length . "5!n")
+ (branch-identifier-length . "5!n")
  (IBAN-structure . "CY2!n3!n5!n16!c")
  (IBAN-length . 28))
 
