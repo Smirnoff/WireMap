@@ -3,6 +3,23 @@
 (load-relative "math")
 (load-relative "data")
 
+;; TODO: think up some standard for which functions take spaceless ibans and
+;;       which ones don't
+;; TODO: Make the code that splits up and handles iban format codes able to
+;;       support non-fixed lengths
+
+(define +numeric+ (string->char-set "0123456789"))
+(define +capital-letters+ (string->char-set "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
+(define +alpha-numeric+
+  (string->char-set (string-append "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                   "abcdefghijklmnopqrstuvwxyz"
+                                   "0123456789")))
+
+(define (iban-alphanumeric? x)
+  (and (every (lambda (char) (char-set-contains? +alpha-numeric+ char))
+              (string->list x))
+       #t))
+
 (define (iban-sans-spaces x)
   (string-concatenate (string-split x)))
 
@@ -22,7 +39,10 @@
              (string->list rearranged))))))
 
 (define (valid-iban-modulus? iban)
-  (= 1 (large-modulo (iban-modulus iban) 97)))
+  (handle-exceptions
+   exn
+   #f
+   (= 1 (large-modulo (iban-modulus iban) 97))))
 
 (define (iban-country-code iban)
   (and (string? iban)
@@ -30,6 +50,10 @@
        (let ((res (string->symbol (substring (iban-sans-spaces iban) 0 2))))
          (and (valid-country-code? res)
               res))))
+
+(define (iban-country-name iban)
+  (let ((code (iban-country-code iban)))
+    (and code (country-code->country-name code))))
 
 (define (iban-info iban)
   (hash-table-ref/default (iban-registry/country) (iban-country-code iban) '()))
@@ -59,6 +83,20 @@
     (and res
          (iban-format-pieces res))))
 
+(define (iban-format-piece-split x)
+  (let ((match (irregex-match "([0-9]+)(!?)([nac])" x)))
+    (and match
+         (list (string->number (irregex-match-substring match 1))
+               (if (equal? "!" (irregex-match-substring match 2))
+                   'fixed
+                   'less-than)
+               (let ((val (irregex-match-substring match 3)))
+                 (cond
+                  ((equal? val "n") 'numeric)
+                  ((equal? val "c") 'capital-letters)
+                  ((equal? val "a") 'alpha-numeric)
+                  (else (error "Shouldn't get here"))))))))
+
 (define (iban-piece-matches spaceless piece current-pos)
   (if (= 1 (string-length piece))
       (list (equal? (string-ref spaceless current-pos)
@@ -71,15 +109,9 @@
                         (pair? (cdr split-piece))
                         (cadr split-piece)))
              (charset (cond
-                       ((equal? type "n")
-                        (string->char-set "0123456789"))
-                       ((equal? type "a")
-                        (string->char-set "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
-                       ((equal? type "c")
-                        (string->char-set
-                         (string-append "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                                        "abcdefghijklmnopqrstuvwxyz"
-                                        "0123456789")))
+                       ((equal? type "n") +numeric+)
+                       ((equal? type "a") +capital-letters+)
+                       ((equal? type "c") +alpha-numeric+)
                        (else #f))))
         (unless (and count type)
                 (error "Unknown iban parsing instruction" piece))
@@ -90,7 +122,7 @@
                    #t)
               (+ current-pos count)))))
 
-(define (iban-country-format-matches? iban format)
+(define (iban-country-format-matches/where iban format)
   (let ((spaceless (iban-sans-spaces iban)))
     (and format
          (let iter ((format-pieces format)
@@ -103,8 +135,13 @@
                       (matches? (car res)))
                  (if matches?
                      (iter (cdr format-pieces) next-pos)
-                     #f))))
-         #t)))
+                     (list current-pos
+                           (car format-pieces)
+                           (iban-format-piece-split
+                            (car format-pieces))))))))))
+
+(define (iban-country-format-matches? iban format)
+  (eqv? #t (iban-country-format-matches/where iban format)))
 
 (define (valid-iban? iban)
   (and (valid-iban-modulus? iban)
@@ -122,7 +159,7 @@
                      (substring (iban-bban iban)
                                 (car format-info)
                                 (+ (car format-info) (cadr format-info))))))
-      (when (and confirmer
+      (when (and confirmer format-validation
                  (not (car (iban-piece-matches res format-validation 0))))
             (error "Bad bank-identifier" iban res))
       (and format-info
@@ -131,12 +168,12 @@
 (define iban-bank-identifier/no-validate
   (iban-format-getter 'bank-identifier #f))
 (define iban-bank-identifier
-  (bank-format-getter 'bank-identifier 'bank-identifier-length))
+  (iban-format-getter 'bank-identifier 'bank-identifier-length))
 
 (define iban-branch-identifier/no-validate
   (iban-format-getter 'branch-identifier #f))
 (define iban-branch-identifier
-  (bank-format-getter 'branch-identifier 'branch-identifier-length))
+  (iban-format-getter 'branch-identifier 'branch-identifier-length))
 
 (define (swift-code-bank/raw x) (substring x 0 4))
 (define (swift-code-country/raw x) (substring x 4 6))
