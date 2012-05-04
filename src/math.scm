@@ -1,4 +1,4 @@
-(use int-limits)
+(use int-limits) ;; note, the egg for this is number-limits
 
 (define +number-of-digits+
   (let iter ((test-num 9) (digit-count 1))
