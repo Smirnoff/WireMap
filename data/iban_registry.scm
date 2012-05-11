@@ -7,7 +7,9 @@
  (bank-identifier 0 3)
  (branch-identifier 3 4)
  (check-digit . 7)
- (bank-identifier-length . "8!n")
+ (bank-identifier-length . "3!n")
+ (branch-identifier-length . "4!n")
+ (whole-bank-identifier-length . "8!n")
  (IBAN-structure . "AL2!n8!n16!c")
  (IBAN-length . 28))
 

@@ -119,7 +119,7 @@ function click_check_iban()
             if (x["branch-identifier"])
               element_set_by_id(
                 "res_branch_id",
-                "Bank ID: " + x["branch-identifier"]);
+                "Branch ID: " + x["branch-identifier"]);
           }
 
         return;
