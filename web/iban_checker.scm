@@ -81,12 +81,16 @@
          (country-name (iban-country-name iban/spaceless))
          (bank-identifier (iban-bank-identifier/no-validate iban/spaceless))
          (branch-identifier 
-          (iban-branch-identifier/no-validate iban/spaceless)))
+          (iban-branch-identifier/no-validate iban/spaceless))
+         (whole-bank-identifier
+          (iban-whole-bank-identifier/no-validate iban/spaceless))
+)
 
     (user-message
      (var-alist alpha-numeric? valid-modulus? format-match
                 bank-id-correct? branch-id-correct? valid?
-                country-code country-name bank-identifier branch-identifier
+                country-code country-name
+                bank-identifier branch-identifier whole-bank-identifier
                 iban/spaceless))))
 
 (define (handle-args args)

@@ -175,6 +175,11 @@
 (define iban-branch-identifier
   (iban-format-getter 'branch-identifier 'branch-identifier-length))
 
+(define iban-whole-bank-identifier/no-validate
+  (iban-format-getter 'whole-bank-identifier #f))
+(define iban-whole-bank-identifier
+  (iban-format-getter 'whole-bank-identifier 'whole-bank-identifier-length))
+
 (define (swift-code-bank/raw x) (substring x 0 4))
 (define (swift-code-country/raw x) (substring x 4 6))
 (define (swift-code-location/raw x) (substring x 6 8))
