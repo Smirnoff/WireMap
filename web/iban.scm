@@ -1,5 +1,7 @@
 #!/usr/bin/csi -ss
 
+;; note: turn this into html at some point
+
 (use srfi-1 sxml-transforms)
 
 (define (main args)
@@ -11,6 +13,7 @@
            (style " body { padding-top: 60px; } ")
            (link (@ (href "css/bootstrap-responsive.min.css")
                     (rel "stylesheet")))
+           (script (@ (src "misc.js") (type "application/javascript")))
            (script (@ (src "iban.js") (type "application/javascript")))
      )
      (body
@@ -46,7 +49,7 @@
        (p (@ (id "res_country_name")) "")
        (p (@ (id "res_bank_id")) "")
        (p (@ (id "res_branch_id")) "")
-       )       
+       )
        (script (@ (src "js/jquery.js")))
        (script (@ (src "js/bootstrap.min.js"))))
       ))

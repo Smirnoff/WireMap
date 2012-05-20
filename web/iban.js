@@ -1,27 +1,3 @@
-function request_url(type, url, callback, mime_type, err, data)
-{
-  if (err === undefined) err = function(val) { alert("Error: " + val); };
-
-  if (data === undefined) data = null;
-
-  var request = new XMLHttpRequest();
-  request.open(type, url, true);
-  request.onreadystatechange =
-    function(req_event)
-      {
-        if (request.status === 200) callback(request.responseText);
-        else err(request.statusText);
-      };
-  request.overrideMimeType(mime_type);
-  request.send(data);
-}
-
-function post_to_url(url, callback, data, err, mime_type)
-{
-  if (mime_type === undefined) mime_type = "text/plain";
-  request_url('POST', url, callback, mime_type, err, data);
-}
-
 function check_iban(iban, res, err)
 {
   var been_called = false;
@@ -40,23 +16,13 @@ function check_iban(iban, res, err)
 
 // page stuff
 
-var res_ids = ["res_note",
+var iban_res_ids = ["res_note",
                "res_country_code", "res_country_name",
                "res_bank_id", "res_branch_id"];
 
-function fetch_element_by_id(id)
+function clear_iban_results()
 {
-  return document.getElementById(id);
-}
-
-function element_set_by_id(id, value)
-{
-  fetch_element_by_id(id).innerHTML = value;
-}
-
-function clear_results()
-{
-  res_ids.forEach(function(id) { element_set_by_id(id, ""); });
+  iban_res_ids.forEach(function(id) { element_set_by_id(id, ""); });
 }
 
 function is_gapped(iban, gap)
@@ -101,8 +67,7 @@ function click_check_iban()
     iban,
     function(x)
       {
-        clear_results();
-        console.log(x); // debug
+        clear_iban_results();
 
         if (x["message"]) element_set_by_id("res_note", x["message"]);
         else

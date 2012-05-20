@@ -20,8 +20,13 @@
               (string->list x))
        #t))
 
-(define (iban-sans-spaces x)
+(define (string-sans-spaces x)
   (string-concatenate (string-split x)))
+
+(define (string-all-caps x)
+  (list->string (map char-upcase (string->list x))))
+
+(define (iban-sans-spaces x) (string-sans-spaces x))
 
 (define (iban-modulus iban)
   (let* ((spaceless (iban-sans-spaces iban))
@@ -184,6 +189,31 @@
 (define (swift-code-country/raw x) (substring x 4 6))
 (define (swift-code-location/raw x) (substring x 6 8))
 (define (swift-code-branch/raw x) (substring x 8))
+
+(define (swift-code-branch x)
+  (let ((res (swift-code-branch/raw x)))
+    (if (string-null? res)
+        "XXX"
+        res)))
+
+(define (swift-normalize x)
+  (and (string? x)
+       (string-all-caps (string-sans-spaces x))
+       (let ((caps+no-spaces (string-all-caps (string-sans-spaces x))))
+         (cond
+           ((= (string-length caps+no-spaces) 8)
+            (string-append caps+no-spaces (swift-code-branch caps+no-spaces)))
+           ((= (string-length caps+no-spaces) 11)
+            caps+no-spaces)
+           (else #f)))))
+
+(define (swift-main-code x) (substring (swift-normalize x) 0 8))
+
+(define (swift-hash-key x)
+  (let ((x (swift-normalize x)))
+    (if x
+        (list (swift-main-code x) (swift-code-branch x))
+        #f)))
 
 (define (valid-swift-code? code)
   (and ; (string? code) ; do i need this?
