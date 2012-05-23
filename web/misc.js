@@ -8,6 +8,16 @@ function element_set_by_id(id, value)
   fetch_element_by_id(id).innerHTML = value;
 }
 
+function element_from_string(str)
+{
+  var div = document.createElement('div');
+  div.innerHTML = str;
+  if (div.childNodes.length != 1)
+    throw new Error("Didn't get one childnode");
+
+  return div.firstChild;
+}
+
 function request_url(type, url, callback, mime_type, err, data)
 {
   if (err === undefined) err = function(val) { alert("Error: " + val); };

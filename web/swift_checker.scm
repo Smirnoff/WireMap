@@ -27,16 +27,18 @@
          (hash-key (swift-hash-key swift/normalized))
          (details (and valid?
                        (list->vector
-                         (lookup-banks (car hash-key) (cadr hash-key)))))
+                         (bank-details-db-ref (car hash-key) (cadr hash-key)))))
+         (country-name (country-code->country-name code-country))
          )
     (res-to-browser
      'info
      (cond
       (else #f)
      )
-     (let ((details (and (list? details) (list->vector details))))
+     (let ((details (if (vector? details) details (list->vector details))))
        (var-alist valid? code-bank code-country code-location code-branch
-                  details swift swift/normalized))
+                  details swift swift/normalized
+                  country-name))
     )
   )
 )
@@ -44,7 +46,7 @@
 (define (handle-args args)
   (let* ((swift (alist-ref "swift" (vector->list args) equal? #f))
          (swift/normalized (and (string? swift) (swift-normalize swift))))
-    (unless swift (error "No iban provided" args))
+    (unless swift (error "No swift code provided" args))
     (unless swift/normalized (error "Not a string" swift))
     (check-swift swift swift/normalized)))
 

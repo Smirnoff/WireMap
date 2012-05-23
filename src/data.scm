@@ -1,6 +1,5 @@
-(use srfi-1 srfi-69
-;tokyocabinet
-)
+(use srfi-1 srfi-69)
+(use berkeleydb)
 
 ;; filenames
 (define relative-path
@@ -51,53 +50,14 @@
 (define/run-once (currency-data) (file-data +iso-4217+))
 (define/run-once (transaction-templates) (file-data +payment-templates+))
 
-(define (with-tokyocabinet file func
-         #!optional (flags (bitwise-ior
-;                              TC_HDBOWRITER
-                              TC_HDBOREADER
-;                              TC_HDBOCREAT
-;                              TC_HDBOTRUNC
-;                              TC_HDBONOLCK
-                              TC_HDBOLCKNB 
-)))
-  (let ((db (tc-hdb-open file flags: flags))
-        (res #f))
-    (unless db (error "Failed to open tc database" file flags))
-    (handle-exceptions
-      exn
-      (begin
-        (tc-hdb-close db)
-        (abort exn))
-      (lambda () (set! res (func db))))
-    (tc-hdb-close db)
-(printf "debug ~s\n" res)
-    res))
+(define (obj->string x)
+  (with-output-to-string (lambda () (write x))))
+
+(define (string->obj x)
+  (with-input-from-string x read))
 
 (define (swift+branch-key swift branch)
-  (with-output-to-string (lambda () (write (list swift branch)))))
-
-(define (tc-hdb->alist db)
-  (tc-hdb-fold db
-               alist-cons
-               '()))
-
-(define (alist->tc-hdb! lst db)
-  (for-each
-    (lambda (x) (tc-hdb-put! db (car x) (cdr x)))
-    lst))
-
-(define (alist->tokyocabinet/file lst filename)
-  (with-tokyocabinet filename (lambda (db) (alist->tc-hdb! lst db))))
-
-(define (tokyocabinet->alist/file filename)
-  (with-tokyocabinet filename tc-hdb->alist))
-
-(define (lookup-banks swift branch-code)
-  (with-tokyocabinet
-    +bank-details-db+
-    (lambda (db)
-      (or (tc-hdb-get db (swift+branch-key swift branch-code))
-          '()))))
+  (obj->string (list swift branch)))
 
 (define/run-once (transaction-templates/currency)
   (fold (lambda (item res)
@@ -115,3 +75,30 @@
   (alist->hash-table
     (map (lambda (x) (cons (alist-ref 'country-code x) x))
          (iban-registry))))
+
+(define (redo-bank-details-db?)
+  (or (not (file-exists? +bank-details-db+))
+      (< (file-modification-time +bank-details-db+)
+         (file-modification-time +bank-details+))))
+
+(define/run-once (bank-details) (file-data +bank-details+))
+
+(define (ensure-bank-details-db!)
+  (when (redo-bank-details-db?)
+    (call-with-fresh-db
+     +bank-details-db+
+     (lambda (db)
+       (for-each
+        (lambda (x)
+          (db-put!
+           db
+           (obj->string (list (alist-ref 'swift x) (alist-ref 'swift-branch x)))
+           (obj->string x)))
+        (bank-details))))))
+
+(define (bank-details-db-ref swift #!optional (branch "XXX"))
+  (ensure-bank-details-db!)
+  (call-with-db
+   +bank-details-db+
+   (lambda (db)
+     (string->obj (db-get db (obj->string (list swift branch)))))))
