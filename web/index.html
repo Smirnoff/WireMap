@@ -54,7 +54,8 @@
       <p>
         <form onsubmit="return false;">
           <p>
-            <input size="50" type="text" name="data" id="data" />
+            <input size="50" type="text" name="data" id="data"
+                   onkeypress="if (event.keyCode == 13) { click_check_data(); }" />
             <input value="Go" type="button" onclick="click_check_data();" id="go-btn" class="btn-primary" />
           </p>
         </form>
