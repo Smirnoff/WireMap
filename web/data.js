@@ -21,10 +21,15 @@ function find_item(node, func)
 
 function clear_data_results()
 {
-  for (var node in document.getElementById('results').childNodes)
-    {
-      if (node.nodeName != "#text" && typeof(node) != "string")
-        { element_set_by_id(node.id, ""); } }
+  var idx, node;
+  var results = document.getElementById('results');
+  for (idx = 0; idx < results.childNodes.length; idx++)
+    if ((typeof(results.childNodes[idx]) != "string") &&
+        (results.childNodes[idx].nodeName != "#text"))
+      {
+        node = results.childNodes[idx];
+        element_set_by_id(node.id, "");
+      }
 }
 
 function click_check_data()
