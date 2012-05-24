@@ -7,6 +7,13 @@
     body { padding-top: 60px; }
     #iban { height: 40px; width: 35em; }
     #go-btn { height: 40px; width: 5em; margin-left: -5px; }
+
+    .results
+      {
+        width: 40em;
+        display: block; margin-left: auto; margin-right: auto;
+      }
+
     .search-box
       {
         margin-top: 4em;
@@ -56,11 +63,14 @@
     </div>
 
     <hr />
-    <p id="res_note"></p>
-    <p id="res_country_code"></p>
-    <p id="res_country_name"></p>
-    <p id="res_bank_id"></p>
-    <p id="res_branch_id"></p>
+
+    <div class="results">
+      <p id="res_note"></p>
+      <p id="res_country_code"></p>
+      <p id="res_country_name"></p>
+      <p id="res_bank_id"></p>
+      <p id="res_branch_id"></p>
+    </div>
   </div>
 
   <script src="js/jquery.js"></script>
