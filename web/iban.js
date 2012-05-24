@@ -73,18 +73,18 @@ function click_check_iban()
         else
           {
             element_set_by_id(
-              "res_country_code",
-              "ISO 3166-1 alpha-2 Country Code: " + x["country-code"]);
+              "res_note",
+              "The IBAN is valid.");
             element_set_by_id(
               "res_country_name",
               "Country Name: " + x["country-name"]);
-            element_set_by_id(
-              "res_bank_id",
-              "Bank ID: " + x["bank-identifier"]);
-            if (x["branch-identifier"])
-              element_set_by_id(
-                "res_branch_id",
-                "Branch ID: " + x["branch-identifier"]);
+//            element_set_by_id(
+//              "res_bank_id",
+//              "Bank ID: " + x["bank-identifier"]);
+//            if (x["branch-identifier"])
+//              element_set_by_id(
+//                "res_branch_id",
+//                "Branch ID: " + x["branch-identifier"]);
           }
 
         return;
