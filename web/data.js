@@ -14,24 +14,41 @@ function check_data(data, res, err)
               err);
 }
 
-function find_item(node, func)
+function removeChildren(x)
 {
-  var res = [];
+  if (x.hasChildNodes())
+    {
+      while (x.childNodes.length > 0)
+        {
+          x.removeChild(x.firstChild);
+        }
+    }
 }
 
 function clear_data_results()
 {
-  var idx, node;
   var results = document.getElementById('results');
-  for (idx = 0; idx < results.childNodes.length; idx++)
-    if ((typeof(results.childNodes[idx]) != "string") &&
-        (results.childNodes[idx].nodeName != "#text"))
-      {
-        node = results.childNodes[idx];
-        element_set_by_id(node.id, "");
-      }
+  removeChildren(results);
 }
 
+function set_data_results(msgs)
+{
+  var results = document.getElementById('results');
+  msgs.forEach(
+    function(msg)
+      {
+        results.appendChild(element_from_string('<p>' + msg + '</p>'));
+      });
+}
+
+function list_map(func, lst)
+{
+  var res = [];
+  lst.forEach(function(x){res.push(func(x));});
+  return res;
+}
+
+var d; // debug
 function click_check_data()
 {
   var data = document.getElementById("data").value;
@@ -40,8 +57,8 @@ function click_check_data()
     function(res)
       {
         clear_data_results();
-        res.messages.forEach(
-          function(item){element_set_by_id(item[0], item[1]);});
+        d = res;// debug
+        set_data_results(list_map(function(x){return x[1];}, res.messages));
       }
   );
 }

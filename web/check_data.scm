@@ -102,13 +102,62 @@
                 iban/spaceless))))
 
 (define (handle-swift swift)
-  #f)
+  (let* ((swift/normalized (swift-normalize swift))
+         (valid? (valid-swift-code? swift/normalized))
+         (code-bank (and valid? (swift-code-bank/raw swift/normalized)))
+         (code-country (and valid? (swift-code-country/raw swift/normalized)))
+         (code-location (and valid? (swift-code-location/raw swift/normalized)))
+         (code-branch (and valid? (swift-code-branch swift/normalized)))
+         (hash-key (swift-hash-key swift/normalized))
+         (details-alist
+          (and valid?
+               (bank-details-db-ref (car hash-key) (cadr hash-key))))
+         (other-swifts
+          (bank-swifts-db-ref (swift-main-code swift/normalized)))
+         (details (and (list? details-alist) (list->vector details-alist)))
+         (country-name (country-code->country-name code-country))
+         (res (var-alist valid? code-bank code-country code-location code-branch
+                  details swift swift/normalized
+                  country-name))
+         )
+    (res-to-browser
+     'info
+     (cond
+      (valid?
+       (filter
+        cadr
+        `(("res_note" "The SWIFT code is valid.")
+          ("res_bank_name" ,(alist-ref 'bank-name details-alist))
+          ("res_branch_name" ,(alist-ref 'branch details-alist))
+          ("res_address" ,(alist-ref 'address details-alist))
+          ("res_location"
+           ,(let* ((city (alist-ref 'city details-alist))
+                   (location (alist-ref 'location details-alist)))
+              (and (not (equal? city location))
+                   location)))
+          ("res_city" ,(alist-ref 'city details-alist))
+          ("res_country" ,country-name)
+          )))
+      ((not other-swifts)
+       `(("res_note" "No such SWIFT code.")))
+      ((and (not details-alist) other-swifts)
+       `(("res_note"
+          ,(format
+            "Valid SWIFT code, but ~a is not a valid branch." code-branch))))
+      (else (error "Unknown result"))
+      )
+     res
+     )
+    )
+  )
 
 (define (handle-args args)
   (let ((data (alist-ref "data" (vector->list args) equal? #f)))
     (cond
      ((valid-iban? data) (handle-iban data))
      ((valid-swift-code? data) (handle-swift data))
+     ((looks-like-an-iban? data) (handle-iban data))
+     ((looks-like-a-swift-code? data) (handle-swift data))
      (else (error "Unknown code type" data)))))
 
 (define (main args)

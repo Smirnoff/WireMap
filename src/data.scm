@@ -13,6 +13,7 @@
 (define +bank-details-db+ (relative-path "../data/bank_details.db"))
 (define +payment-templates+ (relative-path "../data/payment_templates.scm"))
 (define +iban-registry+ (relative-path "../data/iban_registry.scm"))
+(define +abm-banks+ (relative-path "../data/abm_bank_numbers.scm"))
 
 (define (file-data filename) (with-input-from-file filename read-file))
 
@@ -83,6 +84,15 @@
 
 (define/run-once (bank-details) (file-data +bank-details+))
 
+(define (db-append-obj! db key value)
+  (let ((key/str (obj->string key)))
+    (db-put!
+     db
+     key/str
+     (obj->string
+      (cons value
+            (string->obj (db-get/default db key/str (obj->string '()))))))))
+
 (define (ensure-bank-details-db!)
   (when (redo-bank-details-db?)
     (call-with-fresh-db
@@ -90,10 +100,13 @@
      (lambda (db)
        (for-each
         (lambda (x)
-          (db-put!
-           db
-           (obj->string (list (alist-ref 'swift x) (alist-ref 'swift-branch x)))
-           (obj->string x)))
+          (let ((swift (alist-ref 'swift x))
+                (branch (alist-ref 'swift-branch x)))
+            (db-put!
+             db
+             (obj->string (list swift branch))
+             (obj->string x))
+            (db-append-obj! db (list swift #f) (list swift branch))))
         (bank-details))))))
 
 (define (bank-details-db-ref swift #!optional (branch "XXX"))
@@ -101,4 +114,21 @@
   (call-with-db
    +bank-details-db+
    (lambda (db)
-     (string->obj (db-get db (obj->string (list swift branch)))))))
+     (string->obj
+      (db-get/default db (obj->string (list swift branch)) (obj->string #f))))))
+
+(define (bank-swifts-db-ref swift)
+  (ensure-bank-details-db!)
+  (call-with-db
+   +bank-details-db+
+   (lambda (db)
+     (string->obj
+      (db-get/default db (obj->string (list swift #f)) (obj->string #f))))))
+
+(define/run-once (abm-banks) (file-data +abm-banks+))
+(define/run-once (abm-number-hash)
+  (alist->hash-table
+   (map (lambda (x) (cons (alist-ref 'number x) x)) (abm-banks))))
+
+(define (abm-bank-number-ref num)
+  (hash-table-ref/default (abm-number-hash) num #f))

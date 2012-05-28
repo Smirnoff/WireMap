@@ -52,7 +52,8 @@
 (define (iban-country-code iban)
   (and (string? iban)
        (<= 2 (string-length iban))
-       (let ((res (string->symbol (substring (iban-sans-spaces iban) 0 2))))
+       (let ((res (string->symbol
+                   (substring (iban-sans-spaces (string-all-caps iban)) 0 2))))
          (and (valid-country-code? res)
               res))))
 
@@ -152,6 +153,13 @@
   (and (valid-iban-modulus? iban)
        (iban-country-format-matches? iban (iban-country-format/split iban))))
 
+(define (looks-like-an-iban? iban)
+  (and (iban-alphanumeric? (string-sans-spaces iban))
+       (let ((len (string-length (string-sans-spaces iban))))
+         (and (>= len 15) (<= len 31)))
+       (iban-country-code iban)
+       #t))
+
 (define (iban-bban iban)
   (substring iban 4))
 
@@ -230,4 +238,60 @@
        (every (lambda (x) (and (char-set-contains? char-set:ascii x)
                                (char-set-contains? char-set:letter+digit x)))
               (string->list (swift-code-location/raw code)))
+       #t))
+
+(define (looks-like-a-swift-code? code)
+  (and (swift-normalize code)
+       #t))
+
+(define (clabe-valid-length? x) (= (string-length x) 18))
+(define (clabe-is-numeric? x)
+  (and (every (lambda (x) (char-set-contains? +numeric+ x))
+              (string->list x))
+       #t))
+
+(define (clabe-bank-code/raw x) (substring x 0 3))
+(define (clabe-branch-code/raw x) (substring x 3 6))
+(define (clabe-account-number/raw x) (substring x 6 17))
+(define (clabe-sans-control-digit/raw x) (substring x 0 17))
+(define (clabe-control-digit/raw x) (substring x 17 18))
+
+(define (char->digit x) (- (char->integer x) 48))
+
+(define (weight-factor idx)
+  (cond
+   ((= (modulo idx 3) 0) 3)
+   ((= (modulo idx 3) 1) 7)
+   ((= (modulo idx 3) 2) 1)
+   (else (error "What" idx (modulo idx 3)))))
+
+(define (calculate-clabe-control-digit x)
+  (modulo
+   (- 10
+      (modulo
+       (fold +
+             0
+             (map (lambda (digit weight) (modulo (* digit weight) 10))
+                  (map char->digit
+                       (string->list (clabe-sans-control-digit/raw x)))
+                  (map weight-factor (iota 17))))
+       10))
+   10))
+
+(define (clabe-valid-control-digit? x)
+  (equal? (clabe-control-digit/raw x)
+          (->string (calculate-clabe-control-digit x))))
+
+(define (clabe-bank-info x)
+  (abm-bank-number-ref (clabe-bank-code/raw x)))
+
+(define (clabe-valid-bank-code? x) (and (clabe-bank-info x) #t))
+
+(define (clabe-normalize x) (string-trim-both x))
+
+(define (valid-clabe? x)
+  (and (clabe-valid-length? x)
+       (clabe-is-numeric? x)
+       (clabe-valid-control-digit? x)
+       (clabe-valid-bank-code? x)
        #t))
