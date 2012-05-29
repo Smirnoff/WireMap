@@ -1,5 +1,5 @@
 (use srfi-1 srfi-69)
-(use berkeleydb)
+(use berkeleydb posix)
 
 ;; filenames
 (define relative-path
