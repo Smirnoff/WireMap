@@ -151,13 +151,55 @@
     )
   )
 
+(define (handle-clabe clabe)
+  (let* ((clabe/normalized (clabe-normalize clabe))
+         (valid? (valid-clabe? clabe/normalized))
+         (valid-length?
+          (and (not valid?) (clabe-valid-length? clabe/normalized)))
+         (valid-chars?
+          (and (not valid?) (clabe-is-numeric? clabe/normalized)))
+         (valid-control-digit?
+          (and (not valid?) (clabe-valid-control-digit? clabe/normalized)))
+         (valid-bank-code?
+          (and (not valid?) (clabe-valid-bank-code? clabe/normalized)))
+         (info (and valid? (clabe-bank-info clabe/normalized)))
+         )
+    (res-to-browser
+     'info
+     (cond
+      (valid?
+       `(("foo" "The code is a valid CLABE.")
+         ("bar" ,(format "Bank: ~a" (alist-ref 'name info)))))
+      ((not valid-length?)
+       `(("foo" "The code resembles a CLABE, but is of the wrong length.")))
+      ((not valid-chars?)
+       `(("foo"
+          ,(string-append
+            "This code has some invalid characters. "
+            "A CLABE is supposed to consist only of numeric characters."))))
+      ((not valid-control-digit?)
+       `(("foo"
+          ,(string-append
+            "The CLABE's control digit failed to calculate correctly. "
+            "Check for transcription errors."))))
+      ((not valid-bank-code?)
+       `(("foo"
+          ,(format "The CLABE references a nonexistent bank code: ~a"
+                   (clabe-bank-code/raw clabe/normalized)))))
+      (else (error "Unknown result")))
+     (let ((info (and info (list->vector info))))
+       (var-alist valid? info clabe clabe/normalized))
+     )))
+
 (define (handle-args args)
   (let ((data (alist-ref "data" (vector->list args) equal? #f)))
     (cond
      ((valid-iban? data) (handle-iban data))
      ((valid-swift-code? data) (handle-swift data))
+     ((valid-clabe? data) (handle-clabe data))
      ((looks-like-an-iban? data) (handle-iban data))
      ((looks-like-a-swift-code? data) (handle-swift data))
+     ((looks-like-a-clabe? data) (handle-clabe data))
      (else (error "Unknown code type" data)))))
 
 (define (main args)

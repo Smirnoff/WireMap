@@ -290,8 +290,12 @@
 (define (clabe-normalize x) (string-trim-both x))
 
 (define (valid-clabe? x)
-  (and (clabe-valid-length? x)
-       (clabe-is-numeric? x)
-       (clabe-valid-control-digit? x)
-       (clabe-valid-bank-code? x)
-       #t))
+  (let ((x (clabe-normalize x)))
+    (and (clabe-valid-length? x)
+         (clabe-is-numeric? x)
+         (clabe-valid-control-digit? x)
+         (clabe-valid-bank-code? x)
+         #t)))
+
+(define (looks-like-a-clabe? x)
+  (clabe-is-numeric? (clabe-normalize x)))
