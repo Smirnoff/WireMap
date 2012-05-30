@@ -48,7 +48,6 @@ function list_map(func, lst)
   return res;
 }
 
-var d; // debug
 function click_check_data()
 {
   var data = document.getElementById("data").value;
@@ -57,7 +56,6 @@ function click_check_data()
     function(res)
       {
         clear_data_results();
-        d = res;// debug
         set_data_results(list_map(function(x){return x[1];}, res.messages));
       }
   );
