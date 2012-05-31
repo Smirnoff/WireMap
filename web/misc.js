@@ -24,20 +24,29 @@ function request_url(type, url, callback, mime_type, err, data)
 
   if (data === undefined) data = null;
 
-  var request = new XMLHttpRequest();
-  request.open(type, url, true);
-  request.onreadystatechange =
-    function(req_event)
-      {
-        if (request.status === 200) callback(request.responseText);
-        else err(request.statusText);
-      };
-  request.overrideMimeType(mime_type);
-  request.send(data);
+  $.ajax(
+    {
+      url: url,
+      type: type,
+      data: data,
+      mimeType: mime_type,
+      success: callback,
+      error: err
+    }
+  );
 }
 
 function post_to_url(url, callback, data, err, mime_type)
 {
   if (mime_type === undefined) mime_type = "text/plain";
   request_url('POST', url, callback, mime_type, err, data);
+}
+
+function array_for_each(array, func)
+{
+  var idx;
+  for (idx = 0; idx < array.length; idx++)
+    {
+      func(array[idx]);
+    }
 }

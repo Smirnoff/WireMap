@@ -7,10 +7,10 @@ function check_data(data, res, err)
                   if (x.length != 0 && !been_called)
                     {
                       been_called = true;
-                      res(JSON.parse(x));
+                      res($.evalJSON(x));
                     }
                 },
-              JSON.stringify({data: data}),
+              $.toJSON({data: data}),
               err);
 }
 
@@ -33,18 +33,19 @@ function clear_data_results()
 
 function set_data_results(msgs)
 {
-  var results = document.getElementById('results');
-  msgs.forEach(
+  var results = document.getElementById("results");
+  array_for_each(
+    msgs,
     function(msg)
       {
-        results.appendChild(element_from_string('<p>' + msg + '</p>'));
+        results.appendChild(element_from_string("<p>" + msg + "</p>"));
       });
 }
 
 function list_map(func, lst)
 {
   var res = [];
-  lst.forEach(function(x){res.push(func(x));});
+  array_for_each(lst, function(x) {res.push(func(x));});
   return res;
 }
 
@@ -60,3 +61,4 @@ function click_check_data()
       }
   );
 }
+
