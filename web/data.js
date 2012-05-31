@@ -62,3 +62,6 @@ function click_check_data()
   );
 }
 
+$(document).ready(function() {
+  $('input.deletable').wrap('<span class="deleteicon" />').after(
+    $('<span/>').click(function() {$(this).prev('input').val('').focus();}));});
