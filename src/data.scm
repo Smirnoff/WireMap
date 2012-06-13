@@ -16,6 +16,9 @@
 (define +abm-banks+ (relative-path "../data/abm_bank_numbers.scm"))
 
 (define (file-data filename) (with-input-from-file filename read-file))
+(define (dump-to-file filename data)
+  (with-output-to-file filename
+    (lambda () (for-each (lambda (x) (write x) (newline)) data))))
 
 (define (run-once func)
   (let ((res #f) (ran? #f))
@@ -93,21 +96,36 @@
       (cons value
             (string->obj (db-get/default db key/str (obj->string '()))))))))
 
+(define (file-contents-for-each filename func)
+  (with-input-from-file filename
+    (lambda ()
+      (let iter ((next (read)))
+        (if (eof-object? next)
+            #f
+            (begin
+              (func next)
+              (iter (read))))))))
+
 (define (ensure-bank-details-db!)
   (when (redo-bank-details-db?)
-    (call-with-fresh-db
-     +bank-details-db+
-     (lambda (db)
-       (for-each
-        (lambda (x)
-          (let ((swift (alist-ref 'swift x))
-                (branch (alist-ref 'swift-branch x)))
-            (db-put!
-             db
-             (obj->string (list swift branch))
-             (obj->string x))
-            (db-append-obj! db (list swift #f) (list swift branch))))
-        (bank-details))))))
+        (error "bank_details.db needs to be regenerated"))
+  (when (redo-bank-details-db?)
+    (with-input-from-file +bank-details+
+      (lambda ()
+        (call-with-fresh-db +bank-details-db+
+          (lambda (db)
+            (let iter ((x (read)))
+              (when (not (eof-object? x))
+                (let ((swift (alist-ref 'swift x))
+                      (branch (alist-ref 'swift-branch x)))
+                  (db-put!
+                   db
+                   (obj->string (list swift branch))
+                   (obj->string x))
+                  (db-append-obj! db (list swift #f) (list swift branch))
+                  (db-sync db))
+                (iter (read))))))))))
+
 
 (define (bank-details-db-ref swift #!optional (branch "XXX"))
   (ensure-bank-details-db!)
